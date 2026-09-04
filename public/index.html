@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BotSailer Voice</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0A1628;--blue:#1565C0;--blue2:#1976D2;--teal:#00897B;
+  --amber:#F57F17;--red:#C62828;--green:#2E7D32;
+  --surface:#F5F7FA;--card:#fff;--border:#E0E4EC;
+  --text:#0A1628;--text2:#4A5568;--text3:#8A96A8;
+  --font:'Inter',system-ui,sans-serif;--radius:10px;
+}
+body{font-family:var(--font);background:var(--surface);color:var(--text);font-size:14px;min-height:100vh}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--navy);display:flex;flex-direction:column;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.brand{padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brand-name{color:#fff;font-size:15px;font-weight:600}
+.brand-sub{color:rgba(255,255,255,.4);font-size:11px;margin-top:2px}
+.nav-section{padding:12px 0}
+.nav-label{color:rgba(255,255,255,.3);font-size:10px;font-weight:600;letter-spacing:.8px;padding:6px 18px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;color:rgba(255,255,255,.6);cursor:pointer;font-size:13px;transition:all .15s;border-left:2px solid transparent}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nav-item.active{color:#fff;background:rgba(21,101,192,.3);border-left-color:#1976D2}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,.08)}
+.credit-box{background:rgba(255,255,255,.06);border-radius:8px;padding:10px 12px}
+.credit-label{color:rgba(255,255,255,.4);font-size:11px}
+.credit-val{color:#fff;font-size:20px;font-weight:700;margin:2px 0}
+.credit-sub{color:rgba(255,255,255,.3);font-size:11px}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.badge-green{background:#E8F5E9;color:#2E7D32}
+.badge-amber{background:#FFF8E1;color:#F57F17}
+.page{display:none;padding:24px;overflow-y:auto;flex:1}
+.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:16px}
+.si-blue{background:#E3F2FD}.si-teal{background:#E0F2F1}.si-amber{background:#FFF8E1}.si-green{background:#E8F5E9}
+.stat-val{font-size:24px;font-weight:700;line-height:1}
+.stat-label{font-size:12px;color:var(--text3);margin-top:3px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sec-title{font-size:14px;font-weight:600}
+.btn{padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--font);border:1px solid var(--border);background:#fff;color:var(--text);transition:all .15s}
+.btn:hover{border-color:#aaa}
+.btn-primary{background:var(--blue2);color:#fff;border-color:var(--blue2)}
+.btn-primary:hover{background:var(--blue)}
+.btn-danger{background:#fff;color:var(--red);border-color:var(--red)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-green{background:var(--green);color:#fff;border-color:var(--green)}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);background:#F8FAFC;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.3px}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#F8FAFC}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.pill-green{background:#E8F5E9;color:#2E7D32}
+.pill-blue{background:#E3F2FD;color:#1565C0}
+.pill-amber{background:#FFF8E1;color:#F57F17}
+.pill-red{background:#FFEBEE;color:#C62828}
+.pill-gray{background:#F1F3F5;color:#6B7280}
+.dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.card-title{font-size:13px;font-weight:600;margin-bottom:12px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;display:block}
+.form-input,.form-select,.form-textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--font);color:var(--text);background:#fff}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--blue2)}
+.form-textarea{resize:vertical;min-height:80px;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.transcript-box{background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:14px;max-height:340px;overflow-y:auto}
+.msg{margin-bottom:10px}
+.msg-role{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.msg-role.agent{color:var(--blue2)}.msg-role.caller{color:var(--teal)}
+.msg-text{font-size:13px;color:var(--text2);line-height:1.5;background:#fff;padding:8px 10px;border-radius:6px;display:inline-block;max-width:90%}
+.player{background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.player-name{font-size:12px;font-weight:500}
+.player-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.dialer-row{display:flex;gap:8px;margin-bottom:16px}
+.webhook-box{background:#0A1628;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;color:#7DD3FC;line-height:1.7;overflow-x:auto;margin-top:8px}
+.wk{color:#93C5FD}.wv{color:#86EFAC}.ws{color:#FCD34D}
+.alert{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none}
+.alert-success{background:#E8F5E9;color:#1B5E20;border:1px solid #A5D6A7}
+.alert-error{background:#FFEBEE;color:#B71C1C;border:1px solid #FFCDD2}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#2E7D32;display:inline-block;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.empty{padding:32px;text-align:center;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="shell">
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-name">⚓ BotSailer Voice</div>
+    <div class="brand-sub">AI Call Platform — Live</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Platform</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)">📊 Dashboard</div>
+    <div class="nav-item" onclick="nav('dialer',this)">📞 Make a Call</div>
+    <div class="nav-item" onclick="nav('calls',this)">📋 Call Logs</div>
+    <div class="nav-item" onclick="nav('transcripts',this)">📄 Transcripts</div>
+    <div class="nav-item" onclick="nav('recordings',this)">🎙 Recordings</div>
+    <div class="nav-item" onclick="nav('agents',this)">🤖 AI Agents</div>
+    <div class="nav-item" onclick="nav('webhook',this)">🔗 Webhook</div>
+    <div class="nav-item" onclick="nav('setup',this)">⚙️ Setup guide</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="credit-box">
+      <div class="credit-label">Twilio account</div>
+      <div class="credit-val" id="credit-status">Checking...</div>
+      <div class="credit-sub" id="credit-sub">Connecting to Twilio</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <span class="badge badge-green"><span class="live-dot"></span> Live</span>
+      <span class="badge badge-amber" id="twilio-badge">Twilio</span>
+      <button class="btn btn-sm" onclick="refreshAll()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="pg-dashboard">
+    <div class="stats">
+      <div class="stat-card"><div class="stat-icon si-blue">📞</div><div class="stat-val" id="stat-calls">—</div><div class="stat-label">Calls today</div></div>
+      <div class="stat-card"><div class="stat-icon si-teal">⏱</div><div class="stat-val" id="stat-dur">—</div><div class="stat-label">Avg duration</div></div>
+      <div class="stat-card"><div class="stat-icon si-green">✅</div><div class="stat-val" id="stat-res">—</div><div class="stat-label">Resolution rate</div></div>
+      <div class="stat-card"><div class="stat-icon si-amber">💰</div><div class="stat-val" id="stat-cost">—</div><div class="stat-label">Spend today</div></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="card-title">Recent calls</div>
+        <div id="dash-calls"><div class="empty">Loading...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Agent performance today</div>
+        <div id="dash-agents"><div class="empty">Loading...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIALER -->
+  <div class="page" id="pg-dialer">
+    <div class="card" style="max-width:480px">
+      <div class="card-title">Launch outbound call</div>
+      <div id="dial-alert" class="alert"></div>
+      <div class="form-group">
+        <label class="form-label">Phone number to call</label>
+        <input class="form-input" id="dial-to" placeholder="+1 (305) 555-0100" type="tel"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Agent</label>
+          <select class="form-select" id="dial-agent"><option value="marina">Marina — booking</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Language</label>
+          <select class="form-select" id="dial-lang">
+            <option value="en-US">English</option>
+            <option value="fr-FR">French</option>
+            <option value="es-ES">Spanish</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-green" onclick="makeCall()" style="width:100%;padding:10px;font-size:14px">📞 Call now</button>
+    </div>
+    <div id="active-calls" style="margin-top:16px"></div>
+  </div>
+
+  <!-- CALL LOGS -->
+  <div class="page" id="pg-calls">
+    <div class="sec-head">
+      <span class="sec-title">Call logs</span>
+      <button class="btn btn-sm" onclick="loadCalls()">↻ Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>From</th><th>Agent</th><th>Dir</th><th>Duration</th><th>Outcome</th><th>Cost</th><th></th></tr></thead>
+        <tbody id="calls-tbody"><tr><td colspan="8"><div class="empty">Loading calls...</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TRANSCRIPTS -->
+  <div class="page" id="pg-transcripts">
+    <div class="sec-head">
+      <span class="sec-title">Transcript viewer</span>
+    </div>
+    <div class="card" style="margin-bottom:12px">
+      <div class="form-row">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Select call</label>
+          <select class="form-select" id="transcript-select" onchange="loadTranscript(this.value)">
+            <option value="">— Pick a call —</option>
+          </select>
+        </div>
+        <div></div>
+      </div>
+    </div>
+    <div class="card" id="transcript-view" style="display:none">
+      <div class="card-title" id="transcript-title">Transcript</div>
+      <div class="transcript-box" id="transcript-messages"></div>
+      <div id="transcript-outcome" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- RECORDINGS -->
+  <div class="page" id="pg-recordings">
+    <div class="sec-head"><span class="sec-title">Call recordings</span></div>
+    <div class="card">
+      <div id="recordings-list"><div class="empty">Loading recordings...</div></div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:#F8FAFC;border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text3)">
+      Recordings stored by Twilio · Click to open · Right-click to download
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="page" id="pg-agents">
+    <div class="sec-head">
+      <span class="sec-title">AI Agents</span>
+      <button class="btn btn-primary" onclick="toggleAgentForm()">+ New agent</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Role</th><th>Direction</th><th>Language</th><th>Status</th><th></th></tr></thead>
+        <tbody id="agents-tbody"><tr><td colspan="6"><div class="empty">Loading...</div></td></tr></tbody>
+      </table>
+    </div>
+    <div id="agent-form" style="display:none">
+      <div class="card">
+        <div class="card-title">Configure new agent</div>
+        <div id="agent-alert" class="alert"></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Agent ID (no spaces)</label><input class="form-input" id="ag-id" placeholder="reef"/></div>
+          <div class="form-group"><label class="form-label">Display name</label><input class="form-input" id="ag-name" placeholder="Reef"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Role</label>
+            <select class="form-select" id="ag-role">
+              <option>Booking & reservations</option><option>Fleet support</option>
+              <option>Membership & upsell</option><option>Payment & billing</option><option>Custom</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Call direction</label>
+            <select class="form-select" id="ag-dir">
+              <option value="inbound">Inbound only</option><option value="outbound">Outbound only</option><option value="both">Both</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Language</label>
+            <select class="form-select" id="ag-lang">
+              <option value="en">English</option><option value="en,fr">English + French</option>
+              <option value="en,es">English + Spanish</option><option value="en,pt">English + Portuguese</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Escalation number</label><input class="form-input" id="ag-esc" placeholder="+1 (305) 555-0100"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Opening greeting</label><input class="form-input" id="ag-greeting" placeholder="Hi, this is Reef from SailorPro..."/></div>
+        <div class="form-group"><label class="form-label">System prompt (agent personality + knowledge)</label><textarea class="form-textarea" id="ag-prompt" style="min-height:120px" placeholder="You are Reef, a billing specialist for SailorPro Fleet. Help customers with invoices, refunds, and payment queries. Keep responses short — this is a phone call..."></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="saveAgent()">Save & activate</button>
+          <button class="btn" onclick="toggleAgentForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEBHOOK -->
+  <div class="page" id="pg-webhook">
+    <div class="sec-head"><span class="sec-title">Webhook — BotSailer / buzz360.io integration</span></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">Your inbound webhook URL</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Set this as your Twilio phone number's "A call comes in" webhook.</div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="inbound-url" readonly style="font-family:monospace;font-size:12px;background:#F8FAFC"/>
+        <button class="btn btn-sm btn-primary" onclick="copy('inbound-url')">Copy</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">Trigger outbound call from BotSailer</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px">POST this from your BotSailer / buzz360.io automation.</div>
+      <div class="webhook-box" id="trigger-payload"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Call-complete event sent to your webhook</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:6px">After every call, this fires to your BotSailer webhook URL.</div>
+      <div class="webhook-box" id="complete-payload"></div>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="page" id="pg-setup">
+    <div class="card" style="max-width:600px">
+      <div class="card-title">🚀 Go-live checklist</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:4px">
+        <div style="border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:6px">1. Deploy to Render</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">
+            Push this project to GitHub, then on <a href="https://render.com" target="_blank" style="color:var(--blue2)">render.com</a> create a new Web Service pointed at your repo.<br>
+            Set build command: <code style="background:#F8FAFC;padding:1px 5px;border-radius:3px">npm install</code><br>
+            Set start command: <code style="background:#F8FAFC;padding:1px 5px;border-radius:3px">node server.js</code>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:6px">2. Set environment variables on Render</div>
+          <div class="webhook-box" style="margin-top:0">
+<span class="wk">TWILIO_ACCOUNT_SID</span>=<span class="ws">ACxxxxxxxxxxxxxxxx</span>
+<span class="wk">TWILIO_AUTH_TOKEN</span>=<span class="ws">your_auth_token</span>
+<span class="wk">TWILIO_PHONE_NUMBER</span>=<span class="ws">+1XXXXXXXXXX</span>
+<span class="wk">OPENAI_API_KEY</span>=<span class="ws">sk-proj-xxxxxxxx</span>
+<span class="wk">BASE_URL</span>=<span class="ws">https://your-app.onrender.com</span>
+<span class="wk">PORT</span>=<span class="ws">3000</span></div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:6px">3. Point Twilio at your app</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.6">
+            In Twilio Console → Phone Numbers → your number:<br>
+            • <b>Voice webhook:</b> <code style="background:#F8FAFC;padding:1px 5px;border-radius:3px">https://your-app.onrender.com/twilio/inbound</code> (HTTP POST)<br>
+            • <b>Status callback:</b> <code style="background:#F8FAFC;padding:1px 5px;border-radius:3px">https://your-app.onrender.com/twilio/status</code>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:6px">4. Test the connection</div>
+          <div style="font-size:12px;color:var(--text2)">Call your Twilio number from any phone. Marina should answer and start the conversation.</div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn btn-sm btn-primary" onclick="testHealth()">Check server health</button>
+            <span id="health-result" style="font-size:12px;color:var(--text3);align-self:center"></span>
+          </div>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:8px;padding:14px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:6px">5. Connect buzz360.io webhook</div>
+          <div style="font-size:12px;color:var(--text2)">In BotSailer, add a webhook action that POSTs to <code style="background:#F8FAFC;padding:1px 5px;border-radius:3px">/api/trigger</code> when a customer opts in for a call.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+const BASE = window.location.origin;
+
+// Navigation
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('pg-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = {dashboard:'Dashboard',dialer:'Make a Call',calls:'Call Logs',transcripts:'Transcripts',recordings:'Recordings',agents:'AI Agents',webhook:'Webhook',setup:'Setup Guide'};
+  document.getElementById('page-title').textContent = titles[id]||id;
+  if(id==='calls') loadCalls();
+  if(id==='transcripts') loadTranscriptList();
+  if(id==='recordings') loadRecordings();
+  if(id==='agents') loadAgents();
+  if(id==='webhook') loadWebhook();
+  if(id==='dashboard') loadDashboard();
+}
+
+// DASHBOARD
+async function loadDashboard() {
+  try {
+    const r = await fetch(BASE+'/api/stats');
+    const d = await r.json();
+    document.getElementById('stat-calls').textContent = d.today.calls;
+    const m = Math.floor(d.today.avg_duration/60), s = d.today.avg_duration%60;
+    document.getElementById('stat-dur').textContent = m+':'+(s<10?'0'+s:s);
+    document.getElementById('stat-res').textContent = d.today.resolution_rate+'%';
+    document.getElementById('stat-cost').textContent = '$'+d.today.cost;
+
+    // Recent calls mini
+    const calls = await fetch(BASE+'/api/calls?limit=5').then(r=>r.json());
+    const dc = document.getElementById('dash-calls');
+    if(!calls.length){ dc.innerHTML='<div class="empty">No calls yet today</div>'; }
+    else {
+      dc.innerHTML = '<table style="width:100%"><thead><tr><th style="text-align:left;font-size:11px;color:var(--text3);padding:4px 0">From</th><th style="font-size:11px;color:var(--text3)">Agent</th><th style="font-size:11px;color:var(--text3)">Outcome</th></tr></thead><tbody>'
+        + calls.map(c=>`<tr><td style="padding:6px 0;font-size:12px">${c.from_number||c.to_number}</td><td style="font-size:12px;color:var(--text3)">${c.agent_name}</td><td>${outcomePill(c.outcome)}</td></tr>`).join('')
+        + '</tbody></table>';
+    }
+
+    // Agent perf
+    const da = document.getElementById('dash-agents');
+    if(!d.agents.length){ da.innerHTML='<div class="empty">No calls yet</div>'; }
+    else {
+      da.innerHTML = '<table style="width:100%"><thead><tr><th style="text-align:left;font-size:11px;color:var(--text3);padding:4px 0">Agent</th><th style="font-size:11px;color:var(--text3)">Calls</th><th style="font-size:11px;color:var(--text3)">Resolved</th></tr></thead><tbody>'
+        + d.agents.map(a=>{
+            const pct = a.total>0?Math.round((a.resolved/a.total)*100):0;
+            return `<tr><td style="padding:6px 0;font-size:12px;font-weight:500">${a.agent_name}</td><td style="font-size:12px;color:var(--text3)">${a.total}</td><td><span class="pill ${pct>=70?'pill-green':'pill-amber'}">${pct}%</span></td></tr>`;
+          }).join('')
+        + '</tbody></table>';
+    }
+  } catch(e){ console.error(e); }
+}
+
+// CALLS
+async function loadCalls() {
+  const tbody = document.getElementById('calls-tbody');
+  tbody.innerHTML = '<tr><td colspan="8"><div class="empty">Loading...</div></td></tr>';
+  try {
+    const calls = await fetch(BASE+'/api/calls?limit=100').then(r=>r.json());
+    if(!calls.length){ tbody.innerHTML='<tr><td colspan="8"><div class="empty">No calls yet — make your first call!</div></td></tr>'; return; }
+    tbody.innerHTML = calls.map(c => {
+      const t = new Date(c.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      const dur = c.duration ? Math.floor(c.duration/60)+':'+(c.duration%60<10?'0':'')+c.duration%60 : '—';
+      const dir = c.direction==='inbound'?'<span class="pill pill-blue">In</span>':'<span class="pill pill-amber">Out</span>';
+      return `<tr>
+        <td>${t}</td>
+        <td style="font-family:monospace;font-size:12px">${c.from_number||c.to_number}</td>
+        <td>${c.agent_name}</td><td>${dir}</td>
+        <td>${dur}</td><td>${outcomePill(c.outcome)}</td>
+        <td>$${(c.cost||0).toFixed(3)}</td>
+        <td><button class="btn btn-sm" onclick="viewTranscript('${c.id}')">Transcript</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e){ tbody.innerHTML='<tr><td colspan="8"><div class="empty" style="color:red">Error loading calls</div></td></tr>'; }
+}
+
+// TRANSCRIPTS
+async function loadTranscriptList() {
+  const sel = document.getElementById('transcript-select');
+  const calls = await fetch(BASE+'/api/calls?limit=50').then(r=>r.json());
+  sel.innerHTML = '<option value="">— Pick a call —</option>'
+    + calls.map(c=>`<option value="${c.id}">${new Date(c.created_at).toLocaleString()} · ${c.from_number||c.to_number} · ${c.agent_name}</option>`).join('');
+}
+
+async function loadTranscript(callId) {
+  if(!callId) return;
+  const [call, msgs] = await Promise.all([
+    fetch(BASE+'/api/calls/'+callId).then(r=>r.json()),
+    fetch(BASE+'/api/transcripts/'+callId).then(r=>r.json()),
+  ]);
+  document.getElementById('transcript-view').style.display='block';
+  document.getElementById('transcript-title').textContent = `${call.agent_name} · ${call.from_number||call.to_number} · ${new Date(call.created_at).toLocaleString()}`;
+  const box = document.getElementById('transcript-messages');
+  if(!msgs.length){ box.innerHTML='<div class="empty">No transcript yet for this call</div>'; }
+  else {
+    box.innerHTML = msgs.map(m=>`<div class="msg">
+      <div class="msg-role ${m.role}">${m.role==='agent'?call.agent_name+' (AI)':'Caller'}</div>
+      <div class="msg-text">${m.message}</div>
+    </div>`).join('');
+    box.scrollTop = box.scrollHeight;
+  }
+  const out = document.getElementById('transcript-outcome');
+  out.innerHTML = `<div style="padding:10px 12px;background:#E8F5E9;border-radius:8px;font-size:12px;color:#1B5E20">Outcome: <b>${call.outcome}</b> · Duration: ${call.duration}s · Cost: $${(call.cost||0).toFixed(3)}</div>`;
+}
+
+function viewTranscript(callId) {
+  nav('transcripts', document.querySelectorAll('.nav-item')[3]);
+  setTimeout(()=>{ loadTranscriptList().then(()=>{ document.getElementById('transcript-select').value=callId; loadTranscript(callId); }); }, 100);
+}
+
+// RECORDINGS
+async function loadRecordings() {
+  const list = document.getElementById('recordings-list');
+  const calls = await fetch(BASE+'/api/calls?limit=50').then(r=>r.json());
+  const withRec = calls.filter(c=>c.recording_url);
+  if(!withRec.length){ list.innerHTML='<div class="empty">No recordings yet — recordings appear after calls complete</div>'; return; }
+  list.innerHTML = withRec.map(c=>`
+    <div class="player">
+      <div style="flex:1">
+        <div class="player-name">${c.agent_name} · ${c.from_number||c.to_number} · ${outcomePill(c.outcome)}</div>
+        <div class="player-meta">${new Date(c.created_at).toLocaleString()} · ${c.duration}s</div>
+      </div>
+      <a href="${c.recording_url}" target="_blank" class="btn btn-sm">▶ Play / Download</a>
+    </div>`).join('');
+}
+
+// AGENTS
+async function loadAgents() {
+  const agents = await fetch(BASE+'/api/agents').then(r=>r.json());
+  const sel = document.getElementById('dial-agent');
+  sel.innerHTML = agents.map(a=>`<option value="${a.id}">${a.name} — ${a.role}</option>`).join('');
+
+  document.getElementById('agents-tbody').innerHTML = agents.map(a=>`<tr>
+    <td><b>${a.name}</b></td><td>${a.role}</td>
+    <td>${a.direction==='inbound'?'<span class="pill pill-blue">Inbound</span>':a.direction==='outbound'?'<span class="pill pill-amber">Outbound</span>':'<span class="pill pill-green">Both</span>'}</td>
+    <td>${a.language}</td>
+    <td>${a.active?'<span class="pill pill-green"><span class="dot"></span> Active</span>':'<span class="pill pill-gray">Inactive</span>'}</td>
+    <td><button class="btn btn-sm ${a.active?'btn-danger':''}" onclick="toggleAgent('${a.id}',${a.active})">${a.active?'Deactivate':'Activate'}</button></td>
+  </tr>`).join('');
+}
+
+function toggleAgentForm() {
+  const f = document.getElementById('agent-form');
+  f.style.display = f.style.display==='none'?'block':'none';
+}
+
+async function saveAgent() {
+  const body = {
+    id: document.getElementById('ag-id').value.trim(),
+    name: document.getElementById('ag-name').value.trim(),
+    role: document.getElementById('ag-role').value,
+    direction: document.getElementById('ag-dir').value,
+    language: document.getElementById('ag-lang').value,
+    greeting: document.getElementById('ag-greeting').value,
+    system_prompt: document.getElementById('ag-prompt').value,
+    escalation_number: document.getElementById('ag-esc').value,
+  };
+  if(!body.id||!body.name){ showAlert('agent-alert','error','Agent ID and name are required.'); return; }
+  const r = await fetch(BASE+'/api/agents',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){ showAlert('agent-alert','success','Agent saved!'); loadAgents(); setTimeout(toggleAgentForm,1500); }
+  else { showAlert('agent-alert','error','Error saving agent.'); }
+}
+
+async function toggleAgent(id, active) {
+  await fetch(BASE+'/api/agents/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:!active})});
+  loadAgents();
+}
+
+// MAKE A CALL
+async function makeCall() {
+  const to = document.getElementById('dial-to').value.trim();
+  const agentId = document.getElementById('dial-agent').value;
+  if(!to){ showAlert('dial-alert','error','Enter a phone number first.'); return; }
+  showAlert('dial-alert','success','Connecting call...');
+  try {
+    const r = await fetch(BASE+'/twilio/outbound',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,agentId})});
+    const d = await r.json();
+    if(d.success){ showAlert('dial-alert','success','✅ Call started! Call ID: '+d.callId); }
+    else { showAlert('dial-alert','error','Error: '+d.error); }
+  } catch(e){ showAlert('dial-alert','error','Server error: '+e.message); }
+}
+
+// WEBHOOK
+function loadWebhook() {
+  const base = BASE;
+  document.getElementById('inbound-url').value = base+'/twilio/inbound';
+  document.getElementById('trigger-payload').innerHTML =
+    `<span class="wk">POST</span> ${base}/api/trigger\n\n{
+  <span class="wk">"api_key"</span>: <span class="ws">"your_api_key"</span>,
+  <span class="wk">"agent_id"</span>: <span class="ws">"marina"</span>,
+  <span class="wk">"to"</span>: <span class="ws">"+13054829103"</span>,
+  <span class="wk">"context"</span>: {
+    <span class="wk">"customer_name"</span>: <span class="ws">"Marina Fontaine"</span>,
+    <span class="wk">"intent"</span>: <span class="ws">"charter_booking"</span>
+  }
+}`;
+  document.getElementById('complete-payload').innerHTML =
+    `{
+  <span class="wk">"event"</span>: <span class="ws">"call.completed"</span>,
+  <span class="wk">"call_id"</span>: <span class="ws">"VC-20240904-0047"</span>,
+  <span class="wk">"agent"</span>: <span class="ws">"marina"</span>,
+  <span class="wk">"outcome"</span>: <span class="ws">"booked"</span>,
+  <span class="wk">"duration_sec"</span>: <span class="wv">154</span>,
+  <span class="wk">"transcript_url"</span>: <span class="ws">"${base}/api/transcripts/VC-0047"</span>,
+  <span class="wk">"recording_url"</span>: <span class="ws">"https://api.twilio.com/recording.mp3"</span>,
+  <span class="wk">"cost_usd"</span>: <span class="wv">0.13</span>
+}`;
+}
+
+// HEALTH
+async function testHealth() {
+  const el = document.getElementById('health-result');
+  el.textContent = 'Checking...';
+  try {
+    const r = await fetch(BASE+'/health');
+    const d = await r.json();
+    el.style.color='var(--green)';
+    el.textContent = '✅ Server OK — '+d.ts;
+  } catch(e){
+    el.style.color='var(--red)';
+    el.textContent = '❌ Cannot reach server';
+  }
+}
+
+// Helpers
+function outcomePill(o) {
+  const map = {booked:'pill-green',completed:'pill-green',confirmed:'pill-green',upsold:'pill-green',escalated:'pill-amber',voicemail:'pill-gray',no_answer:'pill-red',unknown:'pill-gray',callback_scheduled:'pill-blue'};
+  return `<span class="pill ${map[o]||'pill-gray'}">${o||'—'}</span>`;
+}
+
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = 'alert alert-'+type;
+  el.textContent = msg;
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+
+function copy(id) {
+  const el = document.getElementById(id);
+  navigator.clipboard.writeText(el.value);
+}
+
+function refreshAll() { loadDashboard(); }
+
+// Credit status
+async function checkCredit() {
+  try {
+    const r = await fetch(BASE+'/health');
+    if(r.ok){
+      document.getElementById('credit-status').textContent = 'Connected';
+      document.getElementById('credit-sub').textContent = 'Twilio active';
+      document.getElementById('twilio-badge').textContent = '✓ Twilio';
+    }
+  } catch(e){
+    document.getElementById('credit-status').textContent = 'Not deployed';
+    document.getElementById('credit-sub').textContent = 'Deploy to Render first';
+  }
+}
+
+// Init
+loadDashboard();
+checkCredit();
+setInterval(loadDashboard, 30000);
+</script>
+</body>
+</html>
